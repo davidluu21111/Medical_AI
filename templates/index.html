@@ -6,13 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      margin: 0; padding: 0; background: #f0f2f5;
+      margin: 0; padding: 0;
+      background: #f0f2f5;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     }
     header {
-      background: #0175c2; color: #fff;
-      padding: 16px; text-align: center;
-      font-size: 1.5rem; font-weight: 600;
+      background: #0175c2;
+      color: #fff;
+      padding: 16px;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 600;
     }
     .chat-container {
       display: flex; flex-direction: column;
@@ -22,29 +26,63 @@
       overflow: hidden; height: 80vh;
     }
     .chat-box {
-      flex: 1; padding: 16px; overflow-y: auto;
-      background: #e7ebee;
+      flex: 1; padding: 16px;
+      overflow-y: auto; background: #e7ebee;
     }
+
+    /* Each message row */
     .message {
-      display: flex; margin-bottom: 12px; max-width: 80%;
+      display: flex;         /* Place icon & bubble in a row */
+      align-items: flex-end; /* Align them at the bottom */
+      margin-bottom: 12px;
+      max-width: 80%;
     }
     .bubble {
-      padding: 12px 16px; border-radius: 16px;
-      line-height: 1.4; word-wrap: break-word; white-space: pre-wrap;
+      padding: 12px 16px;
+      border-radius: 16px;
+      line-height: 1.4;
+      word-wrap: break-word;
+      white-space: pre-wrap;
     }
-    .message.user { justify-content: flex-end; margin-left: auto; }
-    .message.user .bubble {
-      background: #0175c2; color: #fff;
-      border-bottom-right-radius: 0;
+    /* Shared avatar styling */
+    .avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;       /* Make it circular */
+      object-fit: cover;
     }
-    .message.bot { justify-content: flex-start; margin-right: auto; }
+
+    /* Bot messages on the left */
+    .message.bot {
+      justify-content: flex-start;
+      margin-right: auto;  /* push bubble to the left side */
+    }
     .message.bot .bubble {
-      background: #fff; border: 1px solid #ccc;
+      background: #fff;
+      border: 1px solid #ccc;
       border-bottom-left-radius: 0;
+      margin-left: 8px;  /* space between avatar and bubble */
     }
+
+    /* User messages on the right */
+    .message.user {
+      justify-content: flex-end;
+      margin-left: auto; /* push bubble to the right side */
+    }
+    .message.user .bubble {
+      background: #0175c2;
+      color: #fff;
+      border-bottom-right-radius: 0;
+      margin-right: 8px; /* space between bubble and avatar */
+    }
+
+    /* Reverse the order for user so the bubble is first, avatar second */
+    .message.user { flex-direction: row-reverse; }
+
     .input-area {
-      display: flex; border-top: 1px solid #ccc;
-      background: #f5f5f5; padding: 8px;
+      display: flex;
+      border-top: 1px solid #ccc;
+      background: #f5f5f5;
+      padding: 8px;
     }
     .input-area input {
       flex: 1; border: 1px solid #ccc;
@@ -54,17 +92,29 @@
     .input-area button {
       background: #0175c2; color: #fff;
       border: none; border-radius: 4px;
-      padding: 0 20px; cursor: pointer; font-size: 1rem;
+      padding: 0 20px; cursor: pointer;
+      font-size: 1rem;
     }
-    .input-area button:hover { background: #005999; }
-    .chat-box::-webkit-scrollbar { width: 8px; }
-    .chat-box::-webkit-scrollbar-track { background: #e7ebee; }
+    .input-area button:hover {
+      background: #005999;
+    }
+
+    .chat-box::-webkit-scrollbar {
+      width: 8px;
+    }
+    .chat-box::-webkit-scrollbar-track {
+      background: #e7ebee;
+    }
     .chat-box::-webkit-scrollbar-thumb {
-      background-color: #ccc; border-radius: 4px;
+      background-color: #ccc;
+      border-radius: 4px;
     }
-    @media (max-width: 600px) { header { font-size: 1.2rem; } }
+    @media (max-width: 600px) {
+      header { font-size: 1.2rem; }
+    }
   </style>
 </head>
+
 <body>
   <header>Medical Chatbot</header>
   <div class="chat-container">
@@ -85,30 +135,45 @@
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
 
-    // Append a message bubble
+    // Helper to create a message bubble with an icon
     function appendMessage(text, sender) {
       const messageDiv = document.createElement('div');
       messageDiv.classList.add('message', sender);
 
+      // Create an <img> for the avatar
+      const avatarImg = document.createElement('img');
+      avatarImg.classList.add('avatar');
+      if (sender === 'user') {
+        avatarImg.src = '/static/boy.png'; // Replace with user icon
+        avatarImg.alt = 'User Avatar';
+      } else {
+        avatarImg.src = '/static/doctor.png'; // Replace with doctor/bot icon
+        avatarImg.alt = 'Bot Avatar';
+      }
+
+      // Create the bubble
       const bubbleDiv = document.createElement('div');
       bubbleDiv.classList.add('bubble');
       bubbleDiv.textContent = text;
 
+      // Add avatar and bubble to the message div
+      messageDiv.appendChild(avatarImg);
       messageDiv.appendChild(bubbleDiv);
+
+      // Append message to chat box
       chatBox.appendChild(messageDiv);
       chatBox.scrollTop = chatBox.scrollHeight; // auto-scroll
     }
 
-    // Send message to Flask: POST /chat with FormData
+    // Send message to Flask: POST /chat
     function sendMessage() {
       const text = userInput.value.trim();
       if (!text) return;
 
-      // Show user message
+      // Show user message with user icon
       appendMessage(text, 'user');
       userInput.value = '';
 
-      // Prepare form data
       const formData = new FormData();
       formData.append('msg', text);
 
@@ -118,6 +183,7 @@
       })
         .then(response => response.text())
         .then(botReply => {
+          // Show bot reply with doctor icon
           appendMessage(botReply, 'bot');
         })
         .catch(error => {
@@ -126,7 +192,6 @@
         });
     }
 
-    // Events: click or Enter key
     sendBtn.addEventListener('click', sendMessage);
     userInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') sendMessage();
